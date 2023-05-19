@@ -26,6 +26,11 @@ var (
 
 func main() {
 	if err := run(context.Background(), os.Args); err != nil {
+		var exitError *exec.ExitError
+		if errors.As(err, &exitError) {
+			fmt.Fprintf(os.Stderr, "%s", exitError.Stderr)
+			os.Exit(exitError.ExitCode())
+		}
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
