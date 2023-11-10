@@ -1,1 +1,8 @@
 /wofimoji
+/wofimoji.exe
+
+/build
+
+*.yml
+*.yaml
+*.txt

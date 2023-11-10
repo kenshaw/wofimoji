@@ -1,8 +1,70 @@
-# About
+# wofimoji
 
 Command `wofimoji` is a [`wofi`][wofi] emoji picker.
 
-## Usage
+<p align="center">
+  <a href="#installing" title="Installing">Installing</a> |
+  <a href="#building" title="Building">Building</a> |
+  <a href="#using" title="Using">Using</a> |
+  <a href="https://github.com/kenshaw/wofimoji/releases" title="Releases">Releases</a>
+</p>
+
+[![Releases][release-status]][Releases]
+[![Discord Discussion][discord-status]][discord]
+
+[releases]: https://github.com/kenshaw/wofimoji/releases "Releases"
+[release-status]: https://img.shields.io/github/v/release/kenshaw/wofiwoji?display_name=tag&sort=semver "Latest Release"
+[discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
+[discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
+
+## Installing
+
+`wofiwoji` can be installed [via Release][], [via AUR][] or [via Go][]:
+
+[via Release]: #installing-via-release
+[via AUR]: #installing-via-aur-arch-linux
+[via Go]: #installing-via-go
+
+### Installing via Release
+
+1. [Download a release for your platform][releases]
+2. Extract the `wofiwoji` file from the `.tar.bz2` file
+3. Move the extracted executable to somewhere on your `$PATH`
+
+### Installing via AUR (Arch Linux)
+
+Install `wofiwoji` from the [Arch Linux AUR][aur] in the usual way with the [`yay`
+command][yay]:
+
+```sh
+# install
+$ yay -S wofiwoji
+```
+
+Alternately, build and [install using `makepkg`][arch-makepkg]:
+
+```sh
+# clone package repo and make/install package
+$ git clone https://aur.archlinux.org/wofimoji.git && cd wofimoji
+$ makepkg -si
+==> Making package: wofiwoji 0.12.10-1 (Fri 26 Aug 2022 05:56:09 AM WIB)
+==> Checking runtime dependencies...
+==> Checking buildtime dependencies...
+==> Retrieving sources...
+  -> Downloading wofiwoji-0.12.10.tar.gz...
+...
+```
+
+### Installing via Go
+
+Install `wofiwoji` in the usual Go fashion:
+
+```sh
+# install latest wofiwoji version
+$ go install github.com/kenshaw/wofiwoji@latest
+```
+
+## Using
 
 ```sh
 $ wofimoji --help
@@ -45,3 +107,6 @@ bindsym {
 ```
 
 [wofi]: https://sr.ht/~scoopta/wofi/
+[aur]: https://aur.archlinux.org/packages/wofimoji
+[arch-makepkg]: https://wiki.archlinux.org/title/makepkg
+[yay]: https://github.com/Jguer/yay
