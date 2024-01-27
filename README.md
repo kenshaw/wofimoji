@@ -13,13 +13,13 @@ Command `wofimoji` is a [`wofi`][wofi] emoji picker.
 [![Discord Discussion][discord-status]][discord]
 
 [releases]: https://github.com/kenshaw/wofimoji/releases "Releases"
-[release-status]: https://img.shields.io/github/v/release/kenshaw/wofiwoji?display_name=tag&sort=semver "Latest Release"
+[release-status]: https://img.shields.io/github/v/release/kenshaw/wofimoji?display_name=tag&sort=semver "Latest Release"
 [discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 
 ## Installing
 
-`wofiwoji` can be installed [via Release][], [via AUR][] or [via Go][]:
+`wofimoji` can be installed [via Release][], [via AUR][] or [via Go][]:
 
 [via Release]: #installing-via-release
 [via AUR]: #installing-via-aur-arch-linux
@@ -28,17 +28,17 @@ Command `wofimoji` is a [`wofi`][wofi] emoji picker.
 ### Installing via Release
 
 1. [Download a release for your platform][releases]
-2. Extract the `wofiwoji` file from the `.tar.bz2` file
+2. Extract the `wofimoji` file from the `.tar.bz2` file
 3. Move the extracted executable to somewhere on your `$PATH`
 
 ### Installing via AUR (Arch Linux)
 
-Install `wofiwoji` from the [Arch Linux AUR][aur] in the usual way with the [`yay`
+Install `wofimoji` from the [Arch Linux AUR][aur] in the usual way with the [`yay`
 command][yay]:
 
 ```sh
 # install
-$ yay -S wofiwoji
+$ yay -S wofimoji
 ```
 
 Alternately, build and [install using `makepkg`][arch-makepkg]:
@@ -56,11 +56,11 @@ $ makepkg -si
 
 ### Installing via Go
 
-Install `wofiwoji` in the usual Go fashion:
+Install `wofimoji` in the usual Go fashion:
 
 ```sh
-# install latest wofiwoji version
-$ go install github.com/kenshaw/wofiwoji@latest
+# install latest wofimoji version
+$ go install github.com/kenshaw/wofimoji@latest
 ```
 
 ## Using
