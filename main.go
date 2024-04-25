@@ -17,6 +17,7 @@ import (
 	"github.com/kenshaw/emoji"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/unicode/runenames"
 )
 
 var (
@@ -55,6 +56,7 @@ func run(ctx context.Context, cliargs []string) error {
 	c.Flags().StringVar(&args.Typer, "typer", "wtype", "typer command")
 	c.Flags().VarP(actionFlag{&args.Action}, "action", "a", "action")
 	c.Flags().StringVar(&args.Prompt, "prompt", "emoji", "wofi prompt")
+	c.Flags().BoolVar(&args.Unicode, "unicode", false, "enable named unicode runes")
 	c.Flags().VarP(skinToneFlag{&args.SkinTone}, "skin-tone", "t", "skin tone")
 	c.Flags().VarP(templateFlag{args}, "template", "T", "template file")
 	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
@@ -71,6 +73,7 @@ type Args struct {
 	Typer        string
 	Action       string
 	Prompt       string
+	Unicode      bool
 	SkinTone     emoji.SkinTone
 	Template     *template.Template
 }
@@ -105,6 +108,25 @@ func (args *Args) WriteEmojis(ctx context.Context, w *io.PipeWriter, m map[strin
 			m[string(b)] = e
 			if _, err = w.Write(append(b, '\n')); err != nil {
 				return err
+			}
+		}
+		if args.Unicode {
+			var e emoji.Emoji
+			for r := rune(0); r < 1_000_000; r++ {
+				s := runenames.Name(r)
+				if s != "" && !strings.HasPrefix(s, "<") {
+					buf.Reset()
+					e.Emoji = string(r)
+					e.Description = s
+					if err = args.Template.Execute(buf, e); err != nil {
+						return err
+					}
+					b = bytes.TrimSpace(buf.Bytes())
+					m[string(b)] = e
+					if _, err = w.Write(append(b, '\n')); err != nil {
+						return err
+					}
+				}
 			}
 		}
 		return w.Close()
@@ -279,7 +301,7 @@ func unique(v ...interface{}) string {
 }
 
 // cleanRE is a cleaning regexp.
-var cleanRE = regexp.MustCompile(`(:|,|\.)`)
+var cleanRE = regexp.MustCompile(`[:,\.]`)
 
 //go:embed default.tpl
 var defaultTpl []byte
