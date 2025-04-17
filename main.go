@@ -15,7 +15,7 @@ import (
 	"unicode"
 
 	"github.com/kenshaw/emoji"
-	"github.com/spf13/cobra"
+	"github.com/xo/ox"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/text/unicode/runenames"
 )
@@ -26,82 +26,58 @@ var (
 )
 
 func main() {
-	if err := run(context.Background(), os.Args); err != nil {
-		var exitError *exec.ExitError
-		if errors.As(err, &exitError) {
-			fmt.Fprintf(os.Stderr, "%s", exitError.Stderr)
-			os.Exit(exitError.ExitCode())
-		}
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func run(ctx context.Context, cliargs []string) error {
-	args := &Args{
-		Action: "copy",
-	}
-	c := &cobra.Command{
-		Use:     name,
-		Short:   name + ", the wofi emoji picker",
-		Version: version,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			return args.Run(cmd.Context())
-		},
-	}
-	_ = c.Flags().StringP("config", "c", "", "config file")
-	c.Flags().StringVar(&args.Selector, "selector", "wofi", "selector command")
-	c.Flags().StringSliceVarP(&args.SelectorArgs, "selector-args", "f", nil, "selector args")
-	c.Flags().StringVar(&args.Clipboarder, "clipboarder", "wl-copy", "clipboarder command")
-	c.Flags().StringVar(&args.Typer, "typer", "wtype", "typer command")
-	c.Flags().VarP(actionFlag{&args.Action}, "action", "a", "action")
-	c.Flags().StringVar(&args.Prompt, "prompt", "emoji", "wofi prompt")
-	c.Flags().BoolVar(&args.Unicode, "unicode", false, "enable named unicode runes")
-	c.Flags().VarP(skinToneFlag{&args.SkinTone}, "skin-tone", "t", "skin tone")
-	c.Flags().VarP(templateFlag{args}, "template", "T", "template file")
-	c.SetVersionTemplate("{{ .Name }} {{ .Version }}\n")
-	c.InitDefaultHelpCmd()
-	c.SetArgs(cliargs[1:])
-	c.SilenceErrors, c.SilenceUsage = true, true
-	return c.ExecuteContext(ctx)
+	args := &Args{}
+	ox.RunContext(
+		context.Background(),
+		ox.Defaults(),
+		ox.Usage(name, "the wofi emoji picker"),
+		ox.From(args),
+		ox.Sort(true),
+		ox.Exec(func(ctx context.Context) error {
+			err := args.Run(ctx)
+			if e := (*exec.ExitError)(nil); errors.As(err, &e) {
+				os.Stderr.Write(e.Stderr)
+				os.Exit(e.ExitCode())
+			}
+			return err
+		}),
+	)
 }
 
 type Args struct {
-	Selector     string
-	SelectorArgs []string
-	Clipboarder  string
-	Typer        string
-	Action       string
-	Prompt       string
-	Unicode      bool
-	SkinTone     emoji.SkinTone
-	Template     *template.Template
+	Selector     string         `ox:"selector command,default:wofi"`
+	SelectorArgs []string       `ox:"selector args,short:f"`
+	Clipboarder  string         `ox:"clipboarder command,default:wl-copy"`
+	Typer        string         `ox:"typer command,default:wtype"`
+	Action       string         `ox:"action,default:copy,short:a"`
+	Prompt       string         `ox:"wofi prompt"`
+	Unicode      bool           `ox:"enable named unicode runes"`
+	SkinTone     emoji.SkinTone //`ox:"skin tone,default:neutral,short:t"`
+	Template     string         `ox:"template file,spec:file,short:T"`
 }
 
 func (args *Args) Run(ctx context.Context) error {
-	if args.Template == nil {
-		var err error
-		if args.Template, err = args.NewTemplate(string(defaultTpl)); err != nil {
-			return err
-		}
+	tpl, err := newTemplate(args.Template, args.SkinTone)
+	if err != nil {
+		return err
 	}
 	r, w := io.Pipe()
 	defer r.Close()
 	m := make(map[string]emoji.Emoji)
 	eg, ctx := errgroup.WithContext(ctx)
-	eg.Go(args.WriteEmojis(ctx, w, m))
+	eg.Go(args.WriteEmojis(ctx, w, m, tpl))
 	eg.Go(args.RunCommand(ctx, r, m))
 	return eg.Wait()
 }
 
-func (args *Args) WriteEmojis(ctx context.Context, w *io.PipeWriter, m map[string]emoji.Emoji) func() error {
+func (args *Args) WriteEmojis(ctx context.Context, w *io.PipeWriter, m map[string]emoji.Emoji, tpl *template.Template) func() error {
 	return func() error {
 		var err error
 		var b []byte
 		buf := new(bytes.Buffer)
 		for _, e := range emoji.Gemoji() {
 			buf.Reset()
-			if err = args.Template.Execute(buf, e); err != nil {
+			if err = tpl.Execute(buf, e); err != nil {
 				return err
 			}
 			b = bytes.TrimSpace(buf.Bytes())
@@ -112,13 +88,13 @@ func (args *Args) WriteEmojis(ctx context.Context, w *io.PipeWriter, m map[strin
 		}
 		if args.Unicode {
 			var e emoji.Emoji
-			for r := rune(0); r < 1_000_000; r++ {
+			for r := range rune(1_000_000) {
 				s := runenames.Name(r)
 				if s != "" && !strings.HasPrefix(s, "<") {
 					buf.Reset()
 					e.Emoji = string(r)
 					e.Description = s
-					if err = args.Template.Execute(buf, e); err != nil {
+					if err = tpl.Execute(buf, e); err != nil {
 						return err
 					}
 					b = bytes.TrimSpace(buf.Bytes())
@@ -170,11 +146,21 @@ func (args *Args) Type(ctx context.Context, e emoji.Emoji) error {
 	return cmd.Run()
 }
 
-// NewTemplate creates a new template for s.
-func (args *Args) NewTemplate(s string) (*template.Template, error) {
-	return template.New(s).Funcs(map[string]any{
+// newTemplate creates a new template for s.
+func newTemplate(name string, tone emoji.SkinTone) (*template.Template, error) {
+	var s string
+	if name == "" {
+		s = string(defaultTpl)
+	} else {
+		buf, err := os.ReadFile(name)
+		if err != nil {
+			return nil, err
+		}
+		s = string(buf)
+	}
+	return template.New(name).Funcs(map[string]any{
 		"tone": func(e emoji.Emoji) string {
-			return e.Tone(args.SkinTone)
+			return e.Tone(tone)
 		},
 		"unique": unique,
 	}).Parse(s)
@@ -246,33 +232,8 @@ func (f skinToneFlag) Set(s string) error {
 	return errors.New("invalid skin tone")
 }
 
-type templateFlag struct {
-	args *Args
-}
-
-func (f templateFlag) String() string {
-	return ""
-}
-
-func (f templateFlag) Set(s string) error {
-	buf, err := os.ReadFile(s)
-	if err != nil {
-		return err
-	}
-	tpl, err := f.args.NewTemplate(string(buf))
-	if err != nil {
-		return err
-	}
-	*f.args.Template = *tpl
-	return nil
-}
-
-func (f templateFlag) Type() string {
-	return "file"
-}
-
 // unique returns unique words in v.
-func unique(v ...interface{}) string {
+func unique(v ...any) string {
 	m := make(map[string]bool)
 	var out []string
 	f := func(z string) {
