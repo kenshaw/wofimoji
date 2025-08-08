@@ -33,6 +33,7 @@ func main() {
 		ox.Usage(name, "the wofi emoji picker"),
 		ox.From(args),
 		ox.Sort(true),
+		ox.VersionString(version),
 		ox.Exec(func(ctx context.Context) error {
 			err := args.Run(ctx)
 			if e := (*exec.ExitError)(nil); errors.As(err, &e) {
