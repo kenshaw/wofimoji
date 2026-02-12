@@ -51,7 +51,7 @@ type Args struct {
 	Clipboarder  string         `ox:"clipboarder command,default:wl-copy"`
 	Typer        string         `ox:"typer command,default:wtype"`
 	Action       string         `ox:"action,default:copy,short:a"`
-	Prompt       string         `ox:"wofi prompt"`
+	Prompt       string         `ox:"wofi prompt,default:emoji"`
 	Unicode      bool           `ox:"enable named unicode runes"`
 	SkinTone     emoji.SkinTone //`ox:"skin tone,default:neutral,short:t"`
 	Template     string         `ox:"template file,spec:file,short:T"`
@@ -113,11 +113,24 @@ func (args *Args) WriteEmojis(ctx context.Context, w *io.PipeWriter, m map[strin
 func (args *Args) RunCommand(ctx context.Context, r *io.PipeReader, m map[string]emoji.Emoji) func() error {
 	return func() error {
 		flags := args.SelectorArgs
-		flags = append(
-			flags,
-			"--dmenu",
-			"--prompt", args.Prompt,
-		)
+
+		// Capture everything after '--' manually to bypass ox parsing errors
+		passThrough := false
+		for _, arg := range os.Args {
+			if arg == "--" {
+				passThrough = true
+				continue
+			}
+			if passThrough {
+				flags = append(flags, arg)
+			}
+		}
+
+		flags = append(flags, "--dmenu")
+		if args.Prompt != "" {
+			flags = append(flags, "--prompt", args.Prompt)
+		}
+
 		cmd := exec.CommandContext(ctx, args.Selector, flags...)
 		cmd.Stdin = r
 		buf, err := cmd.Output()
