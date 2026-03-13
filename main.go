@@ -46,19 +46,19 @@ func main() {
 }
 
 type Args struct {
-	Selector     string         `ox:"selector command,default:wofi"`
-	SelectorArgs []string       `ox:"selector args,short:f"`
-	Clipboarder  string         `ox:"clipboarder command,default:wl-copy"`
-	Typer        string         `ox:"typer command,default:wtype"`
-	Action       string         `ox:"action,default:copy,short:a"`
-	Prompt       string         `ox:"wofi prompt"`
-	Unicode      bool           `ox:"enable named unicode runes"`
-	SkinTone     emoji.SkinTone //`ox:"skin tone,default:neutral,short:t"`
-	Template     string         `ox:"template file,spec:file,short:T"`
+	Selector     string    `ox:"selector command,default:wofi"`
+	SelectorArgs []string  `ox:"selector args,short:f"`
+	Clipboarder  string    `ox:"clipboarder command,default:wl-copy"`
+	Typer        string    `ox:"typer command,default:wtype"`
+	Action       string    `ox:"action,default:copy,short:a"`
+	Prompt       string    `ox:"wofi prompt"`
+	Unicode      bool      `ox:"enable named unicode runes"`
+	SkinTone     *SkinTone `ox:"skin tone,default:neutral,short:t"`
+	Template     string    `ox:"template file,spec:file,short:T"`
 }
 
 func (args *Args) Run(ctx context.Context) error {
-	tpl, err := newTemplate(args.Template, args.SkinTone)
+	tpl, err := newTemplate(args.Template, args.SkinTone.S)
 	if err != nil {
 		return err
 	}
@@ -138,12 +138,12 @@ func (args *Args) RunCommand(ctx context.Context, r *io.PipeReader, m map[string
 
 func (args *Args) Copy(ctx context.Context, e emoji.Emoji) error {
 	cmd := exec.CommandContext(ctx, args.Clipboarder)
-	cmd.Stdin = strings.NewReader(e.Tone(args.SkinTone))
+	cmd.Stdin = strings.NewReader(e.Tone(args.SkinTone.S))
 	return cmd.Run()
 }
 
 func (args *Args) Type(ctx context.Context, e emoji.Emoji) error {
-	cmd := exec.CommandContext(ctx, args.Typer, e.Tone(args.SkinTone))
+	cmd := exec.CommandContext(ctx, args.Typer, e.Tone(args.SkinTone.S))
 	return cmd.Run()
 }
 
@@ -194,45 +194,6 @@ func (f actionFlag) Set(s string) error {
 	return errors.New("invalid action")
 }
 
-type skinToneFlag struct {
-	skinTone *emoji.SkinTone
-}
-
-func (f skinToneFlag) String() string {
-	if f.skinTone != nil {
-		return f.skinTone.String()
-	}
-	return ""
-}
-
-func (f skinToneFlag) Type() string {
-	return "tone"
-}
-
-func (f skinToneFlag) Set(s string) error {
-	switch strings.ToLower(s) {
-	case "", "none", "neutral":
-		*f.skinTone = emoji.Neutral
-		return nil
-	case "light":
-		*f.skinTone = emoji.Light
-		return nil
-	case "medium-light":
-		*f.skinTone = emoji.MediumLight
-		return nil
-	case "medium":
-		*f.skinTone = emoji.Medium
-		return nil
-	case "medium-dark":
-		*f.skinTone = emoji.MediumDark
-		return nil
-	case "dark":
-		*f.skinTone = emoji.Dark
-		return nil
-	}
-	return errors.New("invalid skin tone")
-}
-
 // unique returns unique words in v.
 func unique(v ...any) string {
 	m := make(map[string]bool)
@@ -260,6 +221,38 @@ func unique(v ...any) string {
 		}
 	}
 	return strings.Join(out, " ")
+}
+
+// SkinTone wraps [emoji.SkinTone], to provide proper marshalers, as ox won't
+// recognize marshalers on a rune type.
+type SkinTone struct {
+	S emoji.SkinTone
+}
+
+// NewSkinTone creates a new skin tone.
+func NewSkinTone() (*SkinTone, error) {
+	return new(SkinTone), nil
+}
+
+// String satisfies the [fmt.Stringer] interface.
+func (s SkinTone) String() string {
+	return s.S.String()
+}
+
+// UnmarshalText satisfies the [encoding.TextUnmarshaler] interface.
+func (s *SkinTone) UnmarshalText(text []byte) error {
+	return s.S.UnmarshalText(text)
+}
+
+// MarshalText satisfies the [encoding.TextMarshaler] interface.
+func (s *SkinTone) MarshalText() ([]byte, error) {
+	return s.S.MarshalText()
+}
+
+func init() {
+	// register skin tone with ox
+	ox.RegisterTypeName("*main.SkinTone", "*main.SkinTone")
+	ox.RegisterTextType(NewSkinTone)
 }
 
 // cleanRE is a cleaning regexp.
