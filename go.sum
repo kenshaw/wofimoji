@@ -1,8 +1,8 @@
-github.com/kenshaw/emoji v0.4.1 h1:w0SQHeU4iLt+6UCulY88Zr3uIjBU23mjOlbDs4trif8=
-github.com/kenshaw/emoji v0.4.1/go.mod h1:elpkKAS92j09SJvW/0sXfdMgltL7TQi7ToZD4tehPko=
-github.com/xo/ox v0.0.0-20260305011845-0a943b54e93f h1:k5Xz0hdgaszkRRCFX7KUDP4a7OSVH4zlTp2LnIRBhtk=
-github.com/xo/ox v0.0.0-20260305011845-0a943b54e93f/go.mod h1:mJcOxAwSwT8zqJ9gdrvY4OjmnZOJ6Cyqn4LSrbrvc2c=
-golang.org/x/sync v0.20.0 h1:e0PTpb7pjO8GAtTs2dQ6jYa5BWYlMuX047Dco/pItO4=
-golang.org/x/sync v0.20.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
-golang.org/x/text v0.35.0 h1:JOVx6vVDFokkpaq1AEptVzLTpDe9KGpj5tR4/X+ybL8=
-golang.org/x/text v0.35.0/go.mod h1:khi/HExzZJ2pGnjenulevKNX1W67CUy0AsXcNubPGCA=
+github.com/kenshaw/emoji v0.6.2 h1:Pvcy70vmI8BYg7HwvTvI1CkQG5p17Xxsf/wyXcRGW6k=
+github.com/kenshaw/emoji v0.6.2/go.mod h1:elpkKAS92j09SJvW/0sXfdMgltL7TQi7ToZD4tehPko=
+github.com/xo/ox v0.0.0-20260622193027-2d66424338ed h1:YScBkwZowpExnXkb032xkE+Kwol6ETdGtUkTUiv/w50=
+github.com/xo/ox v0.0.0-20260622193027-2d66424338ed/go.mod h1:+6RXNJJpVg7xIpYxSK4Sj70vAKmNxL3nujmQgxNakdc=
+golang.org/x/sync v0.22.0 h1:SZjpbeLmrCk4xhRSZFNZW5gFUeCeFgjekvI/+gfScek=
+golang.org/x/sync v0.22.0/go.mod h1:9xrNwdLfx4jkKbNva9FpL6vEN7evnE43NNNJQ2LF3+0=
+golang.org/x/text v0.40.0 h1:Ub2Z6/xjgF1WrYQz2nuITOEegKFtiIy+rieRJ5lHZKs=
+golang.org/x/text v0.40.0/go.mod h1:hpnzDAfGV753zIKo+wk3u1bVKCGPbrnF7+7LBF/UHVY=
